@@ -57,7 +57,7 @@ const Map = () => {
     <View style={styles.container}>
       <MapView
         style={styles.map}
-        provider={PROVIDER_GOOGLE}
+        //provider={MapView.PROVIDER_GOOGLE}
         mapType={mapType}
         initialRegion={{
           latitude: 35.0068,
@@ -108,7 +108,7 @@ const Map = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 5,
+    flex: 1,
   },
   map: {
     flex: 1,

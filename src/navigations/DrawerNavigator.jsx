@@ -23,23 +23,19 @@ const CustomDrawerContent = (props) => {
   const { navigation, setIsAuthenticated } = props;
 
   const handleLogout = () => {
-    // Perform logout logic
-    setIsAuthenticated(false); // Set authentication state to false
+    setIsAuthenticated(false);
     navigation.navigate("LoginScreen");
   };
 
   return (
     <DrawerContentScrollView {...props}>
-      {/* Drawer Header */}
       <View style={styles.drawerHeader}>
-        <Text style={styles.drawerHeaderText}>Your App Name</Text>
+        <Text style={styles.drawerHeaderText}> Map App</Text>
       </View>
-      {/* Drawer Items */}
       <DrawerItemList {...props} />
-      {/* Logout Button */}
       <TouchableOpacity onPress={handleLogout}>
         <View style={styles.logoutButton}>
-          <MaterialCommunityIcons name="logout" size={24} color="#808080" />
+          <MaterialCommunityIcons name="logout" size={24} color={colors.gray} />
           <Text style={styles.logoutButtonText}>Logout</Text>
         </View>
       </TouchableOpacity>
@@ -51,10 +47,10 @@ const DrawerNavigator = (props) => {
   return (
     <Drawer.Navigator
       screenOptions={{
-        drawerActiveBackgroundColor: colors.secondary,
-        drawerInactiveBackgroundColor: "#ffffff",
-        drawerActiveTintColor: "#000000",
-        drawerInactiveTintColor: "#808080",
+        drawerActiveBackgroundColor: colors.primary,
+        drawerInactiveBackgroundColor: colors.white,
+        drawerActiveTintColor: colors.white,
+        drawerInactiveTintColor: colors.gray,
         drawerLabelStyle: { fontSize: 16 },
       }}
       drawerContent={(drawerProps) => (
@@ -75,7 +71,7 @@ const DrawerNavigator = (props) => {
         component={Home}
       />
       <Drawer.Screen
-        name="ListofMaps"
+        name="List of Maps"
         options={{
           drawerLabel: "List of Maps",
           drawerIcon: ({ color, size }) => (
@@ -124,13 +120,15 @@ const DrawerNavigator = (props) => {
 
 const styles = StyleSheet.create({
   drawerHeader: {
-    padding: 20,
+    padding: 15,
+    backgroundColor: colors.primary,
     borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
+    borderBottomColor: colors.grayLight,
   },
   drawerHeaderText: {
     fontSize: 18,
     fontWeight: "bold",
+    color: colors.white,
   },
   logoutButton: {
     flexDirection: "row",
@@ -141,7 +139,7 @@ const styles = StyleSheet.create({
   logoutButtonText: {
     marginLeft: 15,
     fontSize: 16,
-    color: "#808080",
+    color: colors.gray,
   },
 });
 

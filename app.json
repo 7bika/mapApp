@@ -28,10 +28,10 @@
     "slug": "my-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/LOGO_TT_.jpeg",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/LOGO_TT_.jpeg",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },

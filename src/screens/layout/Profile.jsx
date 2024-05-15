@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { Avatar, Card } from "react-native-paper";
 import * as ImagePicker from "expo-image-picker";
-import { AntDesign } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { getToken } from "../../composable/local";
 
 const Profile = () => {
   const navigation = useNavigation();
@@ -11,27 +11,42 @@ const Profile = () => {
   const [profileImage, setProfileImage] = useState(null);
 
   useEffect(() => {
-    // Fetch user profile data when the component mounts
     fetchUserProfile();
   }, []);
 
   const fetchUserProfile = async () => {
     try {
+      const token = await getToken();
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}users/me`
+        `${process.env.EXPO_PUBLIC_API_URL}users/me`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
+      if (!response.ok) {
+        throw new Error("Failed to fetch user profile");
+      }
+
       const data = await response.json();
-      setUserProfile(data);
+      setUserProfile(data.data.user);
     } catch (error) {
       console.error("Error fetching user profile:", error);
+      Alert.alert(
+        "Error",
+        "An error occurred while fetching the user profile."
+      );
     }
   };
 
   const handleLogout = async () => {
     try {
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}users/logout`,
+        `${process.env.EXPO_PUBLIC_API_URL}/users/logout`,
         {
           method: "POST",
         }
@@ -68,6 +83,7 @@ const Profile = () => {
   const handleEditUser = () => {
     navigation.navigate("EditUser");
   };
+
   return (
     <View style={styles.container}>
       <Card style={styles.card}>

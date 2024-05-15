@@ -1,5 +1,5 @@
 //import liraries
-import React from "react";
+import React, { Component } from "react";
 import {
   View,
   Text,
@@ -10,7 +10,6 @@ import {
 } from "react-native";
 import Onboarding from "react-native-onboarding-swiper";
 import { useNavigation } from "@react-navigation/native";
-import colors from "./../../constants/colors";
 
 // create a component
 const OnBoardingScreen = () => {
@@ -164,9 +163,9 @@ const OnBoardingScreen = () => {
               className="w-72 h-72 object-contain"
             />
           ),
-          title: " Votre Emplacement",
+          title: "Plan Your Trip",
           titleStyles: { fontFamily: "serif", textAlign: "right" },
-          subtitle: "Ton guide pour votre déplacement",
+          subtitle: "Plan Your Trip",
           subtitleStyles: { fontFamily: "Monospace", textAlign: "right" },
         },
 
@@ -178,9 +177,9 @@ const OnBoardingScreen = () => {
               className="w-72 h-72 object-contain"
             />
           ),
-          title: "Selectionnez ",
+          title: "Select the Date",
           titleStyles: { fontFamily: "serif", textAlign: "right" },
-          subtitle: "Selectionnez Ton Emplacement",
+          subtitle: "Select The Date You like",
           subtitleStyles: { fontFamily: "cursive", textAlign: "right" },
         },
 
@@ -192,9 +191,9 @@ const OnBoardingScreen = () => {
               className="w-72 h-72 object-contain"
             />
           ),
-          title: "Experiencez ",
+          title: "Experience New Things",
           titleStyles: { fontFamily: "serif", textAlign: "right" },
-          subtitle: "Es-Tu Pret ?\n LETS GET STARTED !",
+          subtitle: "Ready To experience New things ?\n LETS GET STARTED !",
           subtitleStyles: { fontFamily: "fantasy", textAlign: "right" },
         },
       ]}

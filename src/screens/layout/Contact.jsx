@@ -14,7 +14,7 @@ const Contact = () => {
 
     // Construct the email
     const emailSubject = "Feedback from App";
-    const emailAddress = "azizouachem@gmail.com";
+    const emailAddress = "azizouachem0@gmail.com";
 
     // Open email composer with pre-filled fields
     MailComposer.composeAsync({

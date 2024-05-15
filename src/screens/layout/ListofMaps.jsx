@@ -1,9 +1,12 @@
-import React from 'react'
+import React from "react";
+import { View, Text } from "react-native";
 
-function ListofMaps() {
+const ListofMaps = () => {
   return (
-    <div>ListofMaps</div>
-  )
-}
+    <View>
+      <Text> asba </Text>
+    </View>
+  );
+};
 
-export default ListofMaps
+export default ListofMaps;
