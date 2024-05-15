@@ -1,27 +1,42 @@
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
-import MapView, { Marker, Callout, PROVIDER_GOOGLE } from "react-native-maps";
+import MapView, { Marker, Callout } from "react-native-maps";
 import * as Location from "expo-location";
+import axios from "axios";
 
 const Map = () => {
   const [places, setPlaces] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
   const [mapType, setMapType] = useState("standard");
+  const [loading, setLoading] = useState(false);
+
+  // `${process.env.EXPO_PUBLIC_API_URL}places/getMyPlaces`
 
   useEffect(() => {
-    fetchExistingPlaces();
+    const fetchPlaces = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.EXPO_PUBLIC_API_URL}places`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch places");
+        }
+        const data = await response.json();
+        setPlaces(data.data.places);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching places:", error);
+        Alert.alert("Error", "An error occurred while fetching the places.");
+        setLoading(false);
+      }
+    };
+
+    fetchPlaces();
+  }, [places]);
+
+  useEffect(() => {
     getCurrentLocation();
   }, []);
-
-  const fetchExistingPlaces = async () => {
-    try {
-      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}places`);
-      const data = await response.json();
-      setPlaces(data.data.places);
-    } catch (error) {
-      console.error("Error fetching existing places:", error);
-    }
-  };
 
   const getCurrentLocation = async () => {
     try {
@@ -57,7 +72,6 @@ const Map = () => {
     <View style={styles.container}>
       <MapView
         style={styles.map}
-        provider={PROVIDER_GOOGLE}
         mapType={mapType}
         initialRegion={{
           latitude: 35.0068,
@@ -72,7 +86,7 @@ const Map = () => {
         {userLocation && (
           <Marker
             coordinate={userLocation}
-            title="Your Location"
+            title="Mon Location"
             pinColor="blue"
           />
         )}
@@ -108,7 +122,7 @@ const Map = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 5,
+    flex: 1,
   },
   map: {
     flex: 1,

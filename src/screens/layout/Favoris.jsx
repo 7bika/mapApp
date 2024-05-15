@@ -1,9 +1,13 @@
-import React from 'react'
+import React from "react";
+import { View, Text } from "react-native";
+import Map from "./Map";
 
-function Favoris() {
+const Favoris = () => {
   return (
-    <div>Favoris</div>
-  )
-}
+    <View>
+      <Text> liste d'attente</Text>
+    </View>
+  );
+};
 
-export default Favoris
+export default Favoris;
