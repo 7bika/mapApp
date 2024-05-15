@@ -1,5 +1,12 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  Alert,
+} from "react-native";
 import {
   createDrawerNavigator,
   DrawerContentScrollView,
@@ -16,21 +23,43 @@ import Contact from "./../screens/layout/Contact";
 import Profile from "./../screens/layout/Profile";
 import ListofMaps from "./../screens/layout/ListofMaps";
 import colors from "../constants/colors";
+import EditUser from "../screens/layout/EditUser";
 
 const Drawer = createDrawerNavigator();
 
 const CustomDrawerContent = (props) => {
   const { navigation, setIsAuthenticated } = props;
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    navigation.navigate("LoginScreen");
+  const handleLogout = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}users/logout`,
+        {
+          method: "POST",
+        }
+      );
+      if (response.ok) {
+        setIsAuthenticated(false);
+        navigation.navigate("LoginScreen");
+      } else {
+        Alert.alert("Failed to logout. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error logging out:", error);
+      Alert.alert("An error occurred while logging out.");
+    }
   };
 
   return (
     <DrawerContentScrollView {...props}>
       <View style={styles.drawerHeader}>
-        <Text style={styles.drawerHeaderText}> Map App</Text>
+        <Image
+          source={{
+            uri: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcToRnGwDt0jnjyObLRudmZP_2urlpsGZljaaO_bo0wd5g&s",
+          }}
+          style={styles.drawerHeaderImage}
+          resizeMode="contain"
+        />
       </View>
       <DrawerItemList {...props} />
       <TouchableOpacity onPress={handleLogout}>
@@ -91,6 +120,16 @@ const DrawerNavigator = (props) => {
         component={Profile}
       />
       <Drawer.Screen
+        name="Settings"
+        options={{
+          drawerLabel: "Profile Settings",
+          drawerIcon: ({ color, size }) => (
+            <SimpleLineIcons name="settings" size={size} color={color} />
+          ),
+        }}
+        component={EditUser}
+      />
+      <Drawer.Screen
         name="Favoris"
         options={{
           drawerLabel: "Favoris",
@@ -120,21 +159,25 @@ const DrawerNavigator = (props) => {
 
 const styles = StyleSheet.create({
   drawerHeader: {
-    padding: 15,
+    padding: 20,
     backgroundColor: colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
     borderBottomWidth: 1,
     borderBottomColor: colors.grayLight,
   },
-  drawerHeaderText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: colors.white,
+  drawerHeaderImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
   },
   logoutButton: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 15,
     paddingHorizontal: 20,
+    borderTopWidth: 1,
+    borderTopColor: colors.grayLight,
   },
   logoutButtonText: {
     marginLeft: 15,

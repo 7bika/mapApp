@@ -5,7 +5,7 @@ import Map from "./Map";
 const Favoris = () => {
   return (
     <View>
-      <Text> asag</Text>
+      <Text> liste d'attente</Text>
     </View>
   );
 };

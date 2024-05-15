@@ -62,8 +62,8 @@ const LoginScreen = ({ navigation, setIsAuthenticated }) => {
     const data = { email, password };
     try {
       const res = await login(data);
-      console.log(res.data.status, res.data.token, "datas");
-      if (res.data.status.trim() !== "success") {
+      console.log(res.data.status, res.data.token, "datasss");
+      if (res.data.status.trim() !== "success" || res.statusCode === 401) {
         setError(res.data.message || "An error occurred during login");
         setErrorModalVisible(true);
       } else {

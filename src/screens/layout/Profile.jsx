@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ImageBackground,
+} from "react-native";
 import { Avatar, Card } from "react-native-paper";
 import * as ImagePicker from "expo-image-picker";
 import { useNavigation } from "@react-navigation/native";
 import { getToken } from "../../composable/local";
+import colors from "../../constants/colors";
 
 const Profile = () => {
   const navigation = useNavigation();
@@ -34,6 +42,7 @@ const Profile = () => {
 
       const data = await response.json();
       setUserProfile(data.data.user);
+      setProfileImage(data.data.user.photo);
     } catch (error) {
       console.error("Error fetching user profile:", error);
       Alert.alert(
@@ -46,7 +55,7 @@ const Profile = () => {
   const handleLogout = async () => {
     try {
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/users/logout`,
+        `${process.env.EXPO_PUBLIC_API_URL}users/logout`,
         {
           method: "POST",
         }
@@ -70,7 +79,32 @@ const Profile = () => {
       });
 
       if (!result.cancelled) {
-        setProfileImage(result.uri);
+        const token = await getToken();
+        const formData = new FormData();
+        formData.append("photo", {
+          uri: result.uri,
+          name: "profileImage.jpg",
+          type: "image/jpeg",
+        });
+
+        const response = await fetch(
+          `${process.env.EXPO_PUBLIC_API_URL}users/updateMe`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${token}`,
+            },
+            body: formData,
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setProfileImage(data.data.user.photo);
+        } else {
+          Alert.alert("Failed to upload image. Please try again.");
+        }
       } else {
         Alert.alert("You did not select any image.");
       }
@@ -80,35 +114,36 @@ const Profile = () => {
     }
   };
 
-  const handleEditUser = () => {
-    navigation.navigate("EditUser");
-  };
-
   return (
     <View style={styles.container}>
-      <Card style={styles.card}>
-        <Card.Content style={styles.content}>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Text style={styles.logoutButtonText}>Logout</Text>
-          </TouchableOpacity>
+      <ImageBackground
+        source={{ uri: "https://via.placeholder.com/800x400" }}
+        style={styles.background}
+      >
+        <Card style={styles.card}>
+          <Card.Content style={styles.content}>
+            {userProfile && (
+              <View style={styles.userInfo}>
+                <TouchableOpacity onPress={handleSelectImage}>
+                  <Avatar.Image
+                    size={100}
+                    source={{
+                      uri: profileImage || "https://via.placeholder.com/100",
+                    }}
+                    style={styles.avatar}
+                  />
+                </TouchableOpacity>
+                <Text style={styles.userName}>{userProfile.name}</Text>
+                <Text style={styles.userRole}>{userProfile.role}</Text>
+              </View>
+            )}
 
-          {userProfile && (
-            <View style={styles.userInfo}>
-              <Avatar.Image
-                size={100}
-                source={{ uri: profileImage || userProfile.profileImageUrl }}
-                onPress={handleSelectImage}
-              />
-              <Text style={styles.userName}>{userProfile.name}</Text>
-              <Text style={styles.userRole}>{userProfile.role}</Text>
-            </View>
-          )}
-
-          <TouchableOpacity style={styles.editButton} onPress={handleEditUser}>
-            <Text style={styles.editButtonText}>Edit</Text>
-          </TouchableOpacity>
-        </Card.Content>
-      </Card>
+            <TouchableOpacity style={styles.editButton} onPress={handleLogout}>
+              <Text style={styles.editButtonText}>Déconnecter</Text>
+            </TouchableOpacity>
+          </Card.Content>
+        </Card>
+      </ImageBackground>
     </View>
   );
 };
@@ -116,46 +151,59 @@ const Profile = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
+    backgroundColor: colors.bgColor,
+  },
+  background: {
+    flex: 1,
     justifyContent: "center",
-    backgroundColor: "#F5F5F5",
+    alignItems: "center",
   },
   card: {
-    width: "80%",
+    width: "85%",
+    backgroundColor: colors.white,
+    borderRadius: 20,
+    elevation: 5,
+    padding: 20,
   },
   content: {
     alignItems: "center",
   },
   logoutButton: {
-    marginTop: 20,
-    marginBottom: 10,
+    alignSelf: "flex-end",
+    marginBottom: 20,
   },
   logoutButtonText: {
-    color: "#0066FF",
+    color: colors.primary,
+    fontSize: 16,
     textDecorationLine: "underline",
   },
   userInfo: {
     alignItems: "center",
+    marginVertical: 20,
+  },
+  avatar: {
+    marginBottom: 15,
   },
   userName: {
-    marginTop: 10,
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "bold",
+    color: colors.dark,
+    marginBottom: 5,
   },
   userRole: {
-    color: "#999999",
-    marginTop: 5,
+    fontSize: 18,
+    color: colors.gray,
   },
   editButton: {
     marginTop: 20,
-    backgroundColor: "#0066FF",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 5,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 25,
+    paddingVertical: 12,
+    borderRadius: 10,
   },
   editButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
+    color: colors.white,
+    fontSize: 18,
   },
 });
 

@@ -9,6 +9,7 @@ import ForgotPasswordScreen from "./src/screens/auth/ForgotPasswordScreen";
 import ResetPasswordScreen from "./src/screens/auth/ResetPasswordScreen";
 import DrawerNavigator from "./src/navigations/DrawerNavigator";
 import Home from "./src/screens/layout/Home";
+import EditUser from "./src/screens/layout/EditUser";
 
 const Stack = createNativeStackNavigator();
 
@@ -55,7 +56,6 @@ export default function App() {
         component={Home}
         options={{ headerShown: false }}
       />
-
     </Stack.Navigator>
   );
 
