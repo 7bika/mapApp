@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,10 +6,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  ScrollView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { getToken } from "../../composable/local";
 import colors from "../../constants/colors";
+import dayjs from "dayjs";
 
 const EditUser = () => {
   const navigation = useNavigation();
@@ -18,6 +20,41 @@ const EditUser = () => {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [userProfile, setUserProfile] = useState(null);
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const token = await getToken();
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}users/me`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch user profile");
+      }
+
+      const data = await response.json();
+      setUserProfile(data.data.user);
+      setName(data.data.user.name);
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      Alert.alert(
+        "Error",
+        "An error occurred while fetching the user profile."
+      );
+    }
+  };
 
   const handleUpdateName = async () => {
     try {
@@ -82,8 +119,29 @@ const EditUser = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Edit Profile</Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Modifier le Profil</Text>
+
+      {userProfile && (
+        <View style={styles.infoContainer}>
+          <Text style={styles.infoText}>
+            <Text style={styles.infoLabel}>Email: </Text>
+            {userProfile.email}
+          </Text>
+          <Text style={styles.infoText}>
+            <Text style={styles.infoLabel}>Role: </Text>
+            {userProfile.role}
+          </Text>
+          <Text style={styles.infoText}>
+            <Text style={styles.infoLabel}>Joined: </Text>
+            {dayjs(userProfile.createdAt).format("MMM D, YYYY")}
+          </Text>
+          <Text style={styles.infoText}>
+            <Text style={styles.infoLabel}>Last Updated: </Text>
+            {dayjs(userProfile.updatedAt).format("MMM D, YYYY")}
+          </Text>
+        </View>
+      )}
 
       <TextInput
         style={styles.input}
@@ -92,7 +150,7 @@ const EditUser = () => {
         onChangeText={setName}
       />
       <TouchableOpacity style={styles.button} onPress={handleUpdateName}>
-        <Text style={styles.buttonText}>Update Name</Text>
+        <Text style={styles.buttonText}>Modifier le Nom</Text>
       </TouchableOpacity>
 
       <TextInput
@@ -117,46 +175,60 @@ const EditUser = () => {
         onChangeText={setPasswordConfirm}
       />
       <TouchableOpacity style={styles.button} onPress={handleUpdatePassword}>
-        <Text style={styles.buttonText}>Update Password</Text>
+        <Text style={styles.buttonText}>modifier Mot de passe</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.bgColor,
+    backgroundColor: colors.grayLight,
     padding: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "bold",
-    marginBottom: 20,
+    marginBottom: 30,
     color: colors.dark,
+  },
+  infoContainer: {
+    width: "100%",
+    marginBottom: 20,
+  },
+  infoText: {
+    fontSize: 16,
+    color: colors.dark,
+    marginBottom: 5,
+  },
+  infoLabel: {
+    fontWeight: "bold",
   },
   input: {
     width: "100%",
-    padding: 10,
+    padding: 15,
     marginVertical: 10,
     backgroundColor: colors.white,
-    borderRadius: 5,
+    borderRadius: 10,
     borderColor: colors.grayLight,
     borderWidth: 1,
+    fontSize: 16,
   },
   button: {
     width: "100%",
     backgroundColor: colors.primary,
     padding: 15,
     alignItems: "center",
-    borderRadius: 5,
+    borderRadius: 10,
     marginVertical: 10,
   },
   buttonText: {
     color: colors.white,
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });
 

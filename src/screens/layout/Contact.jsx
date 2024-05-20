@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, StyleSheet, TextInput, Button, Alert } from "react-native";
 import * as MailComposer from "expo-mail-composer";
+import colors from "./../../constants/colors";
 
 const Contact = () => {
   const [feedback, setFeedback] = useState("");
@@ -46,8 +47,13 @@ const Contact = () => {
         placeholder="Enter your feedback"
         value={feedback}
         onChangeText={setFeedback}
+        placeholderTextColor={colors.placeholder}
       />
-      <Button title="Send Feedback" onPress={sendFeedback} />
+      <Button
+        title="Send Feedback"
+        onPress={sendFeedback}
+        color={colors.primary}
+      />
     </View>
   );
 };
@@ -57,13 +63,17 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     justifyContent: "center",
+    backgroundColor: colors.background,
   },
   input: {
     height: 150,
-    borderColor: "gray",
+    borderColor: colors.border,
     borderWidth: 1,
     marginBottom: 20,
     padding: 10,
+    backgroundColor: colors.inputBackground,
+    color: colors.text,
+    borderRadius: 5,
   },
 });
 

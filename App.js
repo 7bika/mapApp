@@ -9,7 +9,7 @@ import ForgotPasswordScreen from "./src/screens/auth/ForgotPasswordScreen";
 import ResetPasswordScreen from "./src/screens/auth/ResetPasswordScreen";
 import DrawerNavigator from "./src/navigations/DrawerNavigator";
 import Home from "./src/screens/layout/Home";
-import EditUser from "./src/screens/layout/EditUser";
+
 
 const Stack = createNativeStackNavigator();
 
@@ -30,10 +30,9 @@ export default function App() {
       />
       <Stack.Screen
         name="LoginScreen"
-        component={(props) => (
-          <LoginScreen {...props} setIsAuthenticated={setIsAuthenticated} />
-        )}
+        component={LoginScreen}
         options={{ headerShown: false }}
+        initialParams={{ setIsAuthenticated: setIsAuthenticated }}
       />
       <Stack.Screen
         name="SignupScreen"
@@ -50,7 +49,6 @@ export default function App() {
         component={ResetPasswordScreen}
         options={{ headerShown: false }}
       />
-
       <Stack.Screen
         name="Home"
         component={Home}

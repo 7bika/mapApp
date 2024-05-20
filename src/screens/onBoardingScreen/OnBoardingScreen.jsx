@@ -1,205 +1,197 @@
-//import liraries
-import React, { Component } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  Button,
-  TouchableOpacity,
-} from "react-native";
+// Import libraries
+import React from "react";
+import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import Onboarding from "react-native-onboarding-swiper";
 import { useNavigation } from "@react-navigation/native";
+import colors from "../../constants/colors";
 
-// create a component
+// Create a component
 const OnBoardingScreen = () => {
   const navigation = useNavigation();
 
   const DotComponent = ({ selected }) => {
     return (
       <View
-        className={`w-4 h-4 mx-1 items-center justify-center rounded-full ${
-          selected ? "bg-yellow-600" : "border border-yellow-600"
-        } p-2 `}
+        style={[
+          styles.dot,
+          selected ? styles.selectedDot : styles.unselectedDot,
+        ]}
       >
         <View
-          className={`w-2 h-2 ${
-            selected ? "bg-yellow-600" : "bg-yellow-600"
-          } rounded-full `}
-        ></View>
+          style={[
+            styles.innerDot,
+            selected ? styles.selectedInnerDot : styles.unselectedInnerDot,
+          ]}
+        />
       </View>
     );
   };
 
   const SkipButtonComponent = ({ ...props }) => {
     return (
-      <View style={{ marginHorizontal: 20, paddingBottom: 20, padding: 10 }}>
-        <TouchableOpacity
-          style={{
-            flex: 1,
-            height: 70,
-            width: 80,
-            borderRadius: 10,
-            backgroundColor: "white",
-            justifyContent: "center",
-            alignItems: "center",
-            borderWidth: 1,
-            borderColor: "black",
-          }}
-          {...props}
-        >
-          <Text
-            style={{
-              fontWeight: "bold",
-              color: "black",
-              fontSize: 17,
-              alignItems: "center",
-            }}
-          >
-            SKIP
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity style={styles.skipButton} {...props}>
+        <Text style={styles.skipButtonText}>SKIP</Text>
+      </TouchableOpacity>
     );
   };
 
   const NextButtonComponent = ({ ...props }) => {
     return (
-      <View style={{ marginHorizontal: 20, padding: 10, paddingBottom: 20 }}>
-        <TouchableOpacity
-          style={{
-            flex: 1,
-            height: 70,
-            width: 80,
-            borderRadius: 10,
-            backgroundColor: "black",
-            borderColor: "green",
-            justifyContent: "center",
-            alignItems: "center",
-            borderWidth: 1,
-            borderColor: "grey",
-          }}
-          {...props}
-        >
-          <Text
-            style={{
-              fontWeight: "bold",
-              color: "#ffbf00",
-              fontSize: 17,
-              alignItems: "center",
-            }}
-          >
-            NEXT
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity style={styles.nextButton} {...props}>
+        <Text style={styles.nextButtonText}>NEXT</Text>
+      </TouchableOpacity>
     );
   };
 
   const DoneButtonComponent = ({ ...props }) => {
     return (
-      <View style={{ marginHorizontal: 20, padding: 10, paddingBottom: 20 }}>
-        <TouchableOpacity
-          style={{
-            flex: 1,
-            height: 70,
-            width: 80,
-            borderRadius: 10,
-            backgroundColor: "black",
-            borderColor: "green",
-            justifyContent: "center",
-            alignItems: "center",
-            borderWidth: 1,
-            borderColor: "grey",
-          }}
-          {...props}
-        >
-          <Text
-            style={{
-              fontWeight: "bold",
-              color: "#ffbf00",
-              fontSize: 17,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            {"\u2713"}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity style={styles.doneButton} {...props}>
+        <Text style={styles.doneButtonText}>{"\u2713"}</Text>
+      </TouchableOpacity>
     );
   };
 
   return (
     <Onboarding
       bottomBarHighlight={false}
-      // * to remove the grey color of the bottom bar
-
       onSkip={() => navigation.navigate("Welcome")}
-      // * replace the route permanently we can also use .navigate
-
       onDone={() => navigation.navigate("Welcome")}
-      // * when we are done with it
-
       DotComponent={DotComponent}
-      // * dots in the on Boarding pages
-
       SkipButtonComponent={SkipButtonComponent}
-      // * customization for the skip button
-
       NextButtonComponent={NextButtonComponent}
-      // * customization for the next button
-
       DoneButtonComponent={DoneButtonComponent}
-      // * customization for the done button
-
-      //  &  3 different screens 3 different time
       pages={[
         {
           backgroundColor: "#fff",
           image: (
             <Image
               source={require("./../../../assets/01.png")}
-              className="w-72 h-72 object-contain"
+              style={styles.image}
             />
           ),
-          title: "Plan Your Trip",
-          titleStyles: { fontFamily: "serif", textAlign: "right" },
-          subtitle: "Plan Your Trip",
-          subtitleStyles: { fontFamily: "Monospace", textAlign: "right" },
+          title: "Choisir votre emplacement",
+          titleStyles: styles.title,
+          subtitle: "Plannifier en plein écran ",
+          subtitleStyles: styles.subtitle,
         },
-
         {
           backgroundColor: "#fff",
           image: (
             <Image
               source={require("./../../../assets/02.png")}
-              className="w-72 h-72 object-contain"
+              style={styles.image}
             />
           ),
-          title: "Select the Date",
-          titleStyles: { fontFamily: "serif", textAlign: "right" },
-          subtitle: "Select The Date You like",
-          subtitleStyles: { fontFamily: "cursive", textAlign: "right" },
+          title: "Selectionner l'emplacement",
+          titleStyles: styles.title,
+          subtitle: "Selectionner l'emplacement que vous voulez",
+          subtitleStyles: styles.subtitle,
         },
-
         {
           backgroundColor: "#fff",
           image: (
             <Image
               source={require("./../../../assets/03.png")}
-              className="w-72 h-72 object-contain"
+              style={styles.image}
             />
           ),
-          title: "Experience New Things",
-          titleStyles: { fontFamily: "serif", textAlign: "right" },
-          subtitle: "Ready To experience New things ?\n LETS GET STARTED !",
-          subtitleStyles: { fontFamily: "fantasy", textAlign: "right" },
+          title: "Naviguer avec aise",
+          titleStyles: styles.title,
+          subtitle: "Prêt à découvrir de nouvelles choses\nLET'S GET STARTED!",
+          subtitleStyles: styles.subtitle,
         },
       ]}
     />
   );
 };
 
-//make this component available to the app
+const styles = StyleSheet.create({
+  dot: {
+    width: 12,
+    height: 12,
+    marginHorizontal: 3,
+    borderRadius: 4,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  selectedDot: {
+    backgroundColor: "#000080", // Dark blue
+  },
+  unselectedDot: {
+    borderColor: "#000080", // Dark blue
+    borderWidth: 1,
+  },
+  innerDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+  },
+  selectedInnerDot: {
+    backgroundColor: "#000080", // Dark blue
+  },
+  unselectedInnerDot: {
+    backgroundColor: "#000080", // Dark blue
+  },
+  skipButton: {
+    height: 45,
+    width: 100,
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 10,
+    backgroundColor: "#fff",
+    borderColor: "#000",
+    borderWidth: 1,
+  },
+  skipButtonText: {
+    color: "#000",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  nextButton: {
+    height: 45,
+    width: 100,
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 10,
+    backgroundColor: colors.primary,
+  },
+  nextButtonText: {
+    color: "#fff", // White text
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  doneButton: {
+    height: 45,
+    width: 100,
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 10,
+    backgroundColor: colors.primary,
+  },
+  doneButtonText: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  image: {
+    width: 250,
+    height: 250,
+    resizeMode: "contain",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 18,
+    color: "#666",
+    textAlign: "center",
+  },
+});
+
 export default OnBoardingScreen;

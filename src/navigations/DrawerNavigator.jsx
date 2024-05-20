@@ -24,11 +24,14 @@ import Profile from "./../screens/layout/Profile";
 import ListofMaps from "./../screens/layout/ListofMaps";
 import colors from "../constants/colors";
 import EditUser from "../screens/layout/EditUser";
+import { useNavigation } from "@react-navigation/native";
 
 const Drawer = createDrawerNavigator();
 
 const CustomDrawerContent = (props) => {
-  const { navigation, setIsAuthenticated } = props;
+  const { setIsAuthenticated } = props;
+
+  const navigation = useNavigation();
 
   const handleLogout = async () => {
     try {
@@ -102,7 +105,7 @@ const DrawerNavigator = (props) => {
       <Drawer.Screen
         name="List of Maps"
         options={{
-          drawerLabel: "List of Maps",
+          drawerLabel: "Liste des Places",
           drawerIcon: ({ color, size }) => (
             <SimpleLineIcons name="map" size={size} color={color} />
           ),
@@ -112,9 +115,9 @@ const DrawerNavigator = (props) => {
       <Drawer.Screen
         name="Profile"
         options={{
-          drawerLabel: "Profile",
+          drawerLabel: "Profil",
           drawerIcon: ({ color, size }) => (
-            <MaterialIcons name="person" size={size} color={color} />
+            <SimpleLineIcons name="user" size={size} color={color} />
           ),
         }}
         component={Profile}
@@ -122,7 +125,7 @@ const DrawerNavigator = (props) => {
       <Drawer.Screen
         name="Settings"
         options={{
-          drawerLabel: "Profile Settings",
+          drawerLabel: "paramètres de profil",
           drawerIcon: ({ color, size }) => (
             <SimpleLineIcons name="settings" size={size} color={color} />
           ),
@@ -132,9 +135,9 @@ const DrawerNavigator = (props) => {
       <Drawer.Screen
         name="Favoris"
         options={{
-          drawerLabel: "Favoris",
+          drawerLabel: "Liste d'attente",
           drawerIcon: ({ color, size }) => (
-            <MaterialIcons name="favorite" size={size} color={color} />
+            <SimpleLineIcons name="hourglass" size={size} color={color} />
           ),
         }}
         component={Favoris}

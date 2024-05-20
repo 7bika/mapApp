@@ -5,31 +5,29 @@ import {
   Pressable,
   TextInput,
   TouchableOpacity,
-  Animated,
-  ActivityIndicator,
-  Alert,
   Modal,
-  TouchableWithoutFeedback,
   StyleSheet,
 } from "react-native";
-import Button from "./../../components/Button";
+import Button from "../../components/Button";
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import COLORS from "./../../constants/colors";
+import COLORS from "../../constants/colors";
 import { Ionicons } from "@expo/vector-icons";
 import Checkbox from "expo-checkbox";
-import axios from "axios";
 import { login } from "../../apis/api";
+import colors from "../../constants/colors";
 
-const LoginScreen = ({ navigation, setIsAuthenticated }) => {
+const LoginScreen = ({ navigation, route }) => {
+  const { setIsAuthenticated } = route.params;
+
   const [isPasswordShown, setIsPasswordShown] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorModalVisible, setErrorModalVisible] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState("");
   const [successModalVisible, setSuccessModalVisible] = useState(false);
 
   const isValidEmail = (email) => {
@@ -62,7 +60,6 @@ const LoginScreen = ({ navigation, setIsAuthenticated }) => {
     const data = { email, password };
     try {
       const res = await login(data);
-      console.log(res.data.status, res.data.token, "datasss");
       if (res.data.status.trim() !== "success" || res.statusCode === 401) {
         setError(res.data.message || "An error occurred during login");
         setErrorModalVisible(true);
@@ -72,7 +69,6 @@ const LoginScreen = ({ navigation, setIsAuthenticated }) => {
         setSuccessModalVisible(true);
         const dataFromLocal = await AsyncStorage.getItem("token");
         const token = JSON.parse(dataFromLocal);
-        console.log(token, "token");
         setIsAuthenticated(true);
         navigation.navigate("Home");
         setSuccessModalVisible(false);
@@ -84,215 +80,89 @@ const LoginScreen = ({ navigation, setIsAuthenticated }) => {
       setLoading(false);
     }
   };
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white }}>
-      <View style={{ flex: 1, marginHorizontal: 22 }}>
-        <View style={{ marginVertical: 22 }}>
-          <Text
-            style={{
-              fontSize: 22,
-              fontWeight: "bold",
-              marginVertical: 12,
-              color: COLORS.black,
-            }}
-          >
-            BIENVENUE! 👋
-          </Text>
-
-          <Text
-            style={{
-              fontSize: 16,
-              color: COLORS.black,
-            }}
-          >
-            Re-bonjour tu nous as manqué!
-          </Text>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.innerContainer}>
+        <View style={styles.logo}>
+          <Image
+            source={require("./../../../assets/tt.png")}
+            style={styles.logoImage}
+          />
         </View>
+        <Text style={styles.title}>BIENVENUE! 👋</Text>
 
-        <View style={{ marginBottom: 12 }}>
-          <Text
-            style={{
-              fontSize: 16,
-              fontWeight: 400,
-              marginVertical: 8,
-            }}
-          >
-            Email address
-          </Text>
-
-          <View
-            style={{
-              width: "100%",
-              height: 48,
-              borderColor: COLORS.black,
-              borderWidth: 1,
-              borderRadius: 8,
-              alignItems: "center",
-              justifyContent: "center",
-              paddingLeft: 22,
-            }}
-          >
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Email address</Text>
+          <View style={styles.inputWrapper}>
             <TextInput
               placeholder="Enter your email address"
               placeholderTextColor={COLORS.black}
               keyboardType="email-address"
               autoCapitalize="none"
-              style={{
-                width: "100%",
-              }}
+              style={styles.input}
               value={email}
-              onChangeText={(text) => setEmail(text)}
+              onChangeText={setEmail}
             />
           </View>
         </View>
 
-        <View style={{ marginBottom: 12 }}>
-          <Text
-            style={{
-              fontSize: 16,
-              fontWeight: 400,
-              marginVertical: 8,
-            }}
-          >
-            Password
-          </Text>
-
-          <View
-            style={{
-              width: "100%",
-              height: 48,
-              borderColor: COLORS.black,
-              borderWidth: 1,
-              borderRadius: 8,
-              alignItems: "center",
-              justifyContent: "center",
-              paddingLeft: 22,
-            }}
-          >
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Password</Text>
+          <View style={styles.inputWrapper}>
             <TextInput
               placeholder="Enter your password"
               placeholderTextColor={COLORS.black}
-              secureTextEntry={isPasswordShown}
+              secureTextEntry={!isPasswordShown}
               autoCapitalize="none"
-              style={{
-                width: "100%",
-              }}
+              style={styles.input}
               value={password}
-              onChangeText={(text) => setPassword(text)}
+              onChangeText={setPassword}
             />
-
             <TouchableOpacity
               onPress={() => setIsPasswordShown(!isPasswordShown)}
-              style={{
-                position: "absolute",
-                right: 12,
-              }}
+              style={styles.eyeIconContainer}
             >
-              {isPasswordShown == true ? (
-                <Ionicons name="eye-off" size={24} color={COLORS.black} />
-              ) : (
-                <Ionicons name="eye" size={24} color={COLORS.black} />
-              )}
+              <Ionicons
+                name={isPasswordShown ? "eye-off" : "eye"}
+                size={24}
+                color={COLORS.black}
+              />
             </TouchableOpacity>
           </View>
         </View>
 
-        <View
-          style={{
-            flexDirection: "row",
-            marginVertical: 6,
-          }}
-        >
+        <View style={styles.checkboxContainer}>
           <Checkbox
-            style={{ marginRight: 8 }}
+            style={styles.checkbox}
             value={isChecked}
             onValueChange={setIsChecked}
             color={isChecked ? COLORS.primary : undefined}
           />
-
-          <Text>Remenber Me</Text>
+          <Text style={styles.checkboxLabel}>Souvenir de moi</Text>
         </View>
 
         <Button
           title="Login"
           filled
-          style={{
-            marginTop: 18,
-            marginBottom: 4,
-          }}
+          style={styles.loginButton}
           loading={loading}
           onPress={fetchData}
         />
 
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginVertical: 20,
-          }}
-        >
-          <View
-            style={{
-              flex: 1,
-              height: 1,
-              backgroundColor: COLORS.grey,
-              marginHorizontal: 10,
-            }}
-          />
-          <Text style={{ fontSize: 14 }}>Or Login with</Text>
-          <View
-            style={{
-              flex: 1,
-              height: 1,
-              backgroundColor: COLORS.grey,
-              marginHorizontal: 10,
-            }}
-          />
+        <View style={styles.linkContainer}>
+          <Text style={styles.linkText}>Vous n'avez pas un compte ?</Text>
+          <TouchableOpacity onPress={() => navigation.navigate("SignupScreen")}>
+            <Text style={styles.link}>Register</Text>
+          </TouchableOpacity>
         </View>
 
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "center",
-            marginVertical: 22,
-          }}
-        >
-          <Text style={{ fontSize: 16, color: COLORS.black }}>
-            Vous n'avez pas un compte ?
-          </Text>
-          <Pressable onPress={() => navigation.navigate("SignupScreen")}>
-            <Text
-              style={{
-                fontSize: 16,
-                color: COLORS.primary,
-                fontWeight: "bold",
-                marginLeft: 6,
-              }}
-            >
-              Register
-            </Text>
-          </Pressable>
-        </View>
-
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "center",
-            marginVertical: 22,
-          }}
-        >
-          <Pressable onPress={() => navigation.navigate("ForgotPassword")}>
-            <Text
-              style={{
-                fontSize: 16,
-                color: COLORS.primary,
-                fontWeight: "bold",
-                marginLeft: 6,
-              }}
-            >
-              Oublié ton mot de passe ?
-            </Text>
-          </Pressable>
+        <View style={styles.linkContainer}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("ForgotPassword")}
+          >
+            <Text style={styles.link}>Oublié ton mot de passe ?</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Error Modal */}
@@ -338,72 +208,87 @@ const LoginScreen = ({ navigation, setIsAuthenticated }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 20,
     backgroundColor: COLORS.white,
   },
-  formContainer: {
+  innerContainer: {
     flex: 1,
+    marginHorizontal: 22,
+    marginTop: 30,
+  },
+  logo: {
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  logoImage: {
+    width: 120,
+    height: 140,
   },
   title: {
     fontSize: 22,
     fontWeight: "bold",
-    marginBottom: 12,
+    marginVertical: 12,
     color: COLORS.black,
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 16,
     color: COLORS.black,
-    marginBottom: 20,
+    marginBottom: 22,
+    textAlign: "center",
   },
-  input: {
-    height: 48,
-    borderColor: COLORS.black,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 16,
+  inputContainer: {
     marginBottom: 12,
   },
-  passwordContainer: {
+  label: {
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: COLORS.black,
+    borderRadius: 8,
+    paddingLeft: 22,
   },
-  passwordInput: {
+  input: {
     flex: 1,
+    height: 48,
   },
   eyeIconContainer: {
     position: "absolute",
-    right: 16,
-    top: 12,
+    right: 12,
   },
-  forgotPassword: {
-    alignSelf: "flex-end",
-    marginBottom: 16,
+  checkboxContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 6,
   },
-  forgotPasswordText: {
-    fontSize: 14,
-    color: COLORS.primary,
+  checkbox: {
+    marginRight: 8,
+  },
+  checkboxLabel: {
+    fontSize: 16,
   },
   loginButton: {
-    backgroundColor: COLORS.primary,
-    height: 48,
-    borderRadius: 8,
+    backgroundColor: colors.primary,
+    marginTop: 18,
+    marginBottom: 4,
+  },
+  linkContainer: {
+    flexDirection: "row",
     justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 12,
+    marginVertical: 10,
   },
-  loginButtonText: {
-    color: COLORS.white,
+  linkText: {
     fontSize: 16,
-    fontWeight: "bold",
+    color: COLORS.black,
   },
-  registerText: {
+  link: {
     fontSize: 16,
-    textAlign: "center",
-  },
-  registerLink: {
-    color: COLORS.primary,
+    color: "darkblue",
     fontWeight: "bold",
+    marginLeft: 6,
   },
   modalContainer: {
     flex: 1,
