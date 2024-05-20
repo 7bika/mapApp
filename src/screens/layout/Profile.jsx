@@ -6,12 +6,14 @@ import {
   StyleSheet,
   Alert,
   ImageBackground,
+  Image,
 } from "react-native";
 import { Avatar, Card } from "react-native-paper";
 import * as ImagePicker from "expo-image-picker";
 import { useNavigation } from "@react-navigation/native";
 import { getToken } from "../../composable/local";
 import colors from "../../constants/colors";
+import dayjs from "dayjs";
 
 const Profile = () => {
   const navigation = useNavigation();
@@ -52,65 +54,73 @@ const Profile = () => {
     }
   };
 
-  const handleLogout = async () => {
+  const handleSelectImageFromGallery = async () => {
     try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}users/logout`,
-        {
-          method: "POST",
-        }
-      );
-      if (response.ok) {
-        navigation.navigate("LoginScreen");
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+
+      if (!result.cancelled) {
+        await handleImageUpload(result.uri);
       } else {
-        Alert.alert("Failed to logout. Please try again.");
+        Alert.alert("You did not select any image.");
       }
     } catch (error) {
-      console.error("Error logging out:", error);
-      Alert.alert("An error occurred while logging out.");
+      console.error("Error selecting image from gallery:", error);
+      Alert.alert("An error occurred while selecting an image.");
     }
   };
 
-  const handleSelectImage = async () => {
+  const handleSelectImageFromCamera = async () => {
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({
+      let result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
         quality: 1,
       });
 
       if (!result.cancelled) {
-        const token = await getToken();
-        const formData = new FormData();
-        formData.append("photo", {
-          uri: result.uri,
-          name: "profileImage.jpg",
-          type: "image/jpeg",
-        });
-
-        const response = await fetch(
-          `${process.env.EXPO_PUBLIC_API_URL}users/updateMe`,
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "multipart/form-data",
-              Authorization: `Bearer ${token}`,
-            },
-            body: formData,
-          }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          setProfileImage(data.data.user.photo);
-        } else {
-          Alert.alert("Failed to upload image. Please try again.");
-        }
+        await handleImageUpload(result.uri);
       } else {
-        Alert.alert("You did not select any image.");
+        Alert.alert("You did not take any picture.");
       }
     } catch (error) {
-      console.error("Error selecting image:", error);
-      Alert.alert("An error occurred while selecting an image.");
+      console.error("Error selecting image from camera:", error);
+      Alert.alert("An error occurred while taking a picture.");
+    }
+  };
+
+  const handleImageUpload = async (uri) => {
+    try {
+      const token = await getToken();
+      const formData = new FormData();
+      formData.append("photo", {
+        uri: uri,
+        type: "image/jpeg",
+      });
+
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}users/updateMe`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setProfileImage(data.data.user.photo);
+      } else {
+        Alert.alert("Failed to upload image. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      Alert.alert("An error occurred while uploading the image.");
     }
   };
 
@@ -124,23 +134,36 @@ const Profile = () => {
           <Card.Content style={styles.content}>
             {userProfile && (
               <View style={styles.userInfo}>
-                <TouchableOpacity onPress={handleSelectImage}>
+                <TouchableOpacity onPress={handleSelectImageFromGallery}>
                   <Avatar.Image
-                    size={100}
+                    size={120}
                     source={{
                       uri: profileImage || "https://via.placeholder.com/100",
                     }}
                     style={styles.avatar}
                   />
                 </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.cameraButton}
+                  onPress={handleSelectImageFromCamera}
+                >
+                  <Image
+                    source={require("./../../../assets/favicon.png")}
+                    style={styles.cameraIcon}
+                  />
+                </TouchableOpacity>
+
                 <Text style={styles.userName}>{userProfile.name}</Text>
                 <Text style={styles.userRole}>{userProfile.role}</Text>
+                <Text style={styles.userDate}>
+                  Created: {dayjs(userProfile.createdAt).format("MMM D, YYYY")}
+                </Text>
+                <Text style={styles.userDate}>
+                  Updated: {dayjs(userProfile.updatedAt).format("MMM D, YYYY")}
+                </Text>
               </View>
             )}
-
-            <TouchableOpacity style={styles.editButton} onPress={handleLogout}>
-              <Text style={styles.editButtonText}>Déconnecter</Text>
-            </TouchableOpacity>
           </Card.Content>
         </Card>
       </ImageBackground>
@@ -159,7 +182,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   card: {
-    width: "85%",
+    width: "90%",
     backgroundColor: colors.white,
     borderRadius: 20,
     elevation: 5,
@@ -168,14 +191,20 @@ const styles = StyleSheet.create({
   content: {
     alignItems: "center",
   },
-  logoutButton: {
-    alignSelf: "flex-end",
-    marginBottom: 20,
+
+  cameraButton: {
+    marginTop: 10,
+    backgroundColor: colors.primary,
+    borderRadius: 50,
+    width: 60,
+    height: 60,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  logoutButtonText: {
-    color: colors.primary,
-    fontSize: 16,
-    textDecorationLine: "underline",
+  cameraIcon: {
+    width: 30,
+    height: 30,
+    tintColor: colors.white,
   },
   userInfo: {
     alignItems: "center",
@@ -193,17 +222,11 @@ const styles = StyleSheet.create({
   userRole: {
     fontSize: 18,
     color: colors.gray,
+    marginBottom: 5,
   },
-  editButton: {
-    marginTop: 20,
-    backgroundColor: colors.primary,
-    paddingHorizontal: 25,
-    paddingVertical: 12,
-    borderRadius: 10,
-  },
-  editButtonText: {
-    color: colors.white,
-    fontSize: 18,
+  userDate: {
+    fontSize: 14,
+    color: colors.gray,
   },
 });
 

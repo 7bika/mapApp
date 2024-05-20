@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
 import MapView, { Marker, Callout } from "react-native-maps";
 import * as Location from "expo-location";
-import axios from "axios";
 
 const Map = () => {
   const [places, setPlaces] = useState([]);
@@ -127,14 +126,7 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
   },
-  locationButton: {
-    position: "absolute",
-    bottom: 20,
-    right: 20,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    padding: 10,
-    borderRadius: 8,
-  },
+
   buttonText: {
     color: "white",
     fontWeight: "bold",

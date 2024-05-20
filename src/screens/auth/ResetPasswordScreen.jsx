@@ -7,17 +7,19 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
-import colors from "../../constants/colors";
+import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
-import { AntDesign } from "@expo/vector-icons";
+import colors from "../../constants/colors";
 
-const ResetPasswordScreen = ({ navigation, resetToken }) => {
+const ResetPasswordScreen = ({ navigation }) => {
   const [token, setToken] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isTokenVerified, setIsTokenVerified] = useState(false);
+  const [isPasswordShown, setIsPasswordShown] = useState(false);
+  const [isConfirmPasswordShown, setIsConfirmPasswordShown] = useState(false);
 
   const verifyToken = async () => {
     setLoading(true);
@@ -25,7 +27,6 @@ const ResetPasswordScreen = ({ navigation, resetToken }) => {
       const result = await axios.get(
         `${process.env.EXPO_PUBLIC_API_URL}users/valid/${token}`
       );
-      console.log(result.data, "result");
 
       if (result.data.isExist) {
         setIsTokenVerified(true);
@@ -42,6 +43,7 @@ const ResetPasswordScreen = ({ navigation, resetToken }) => {
       setLoading(false);
     }
   };
+
   const handleResetPassword = async () => {
     if (!password || !confirmPassword) {
       setError("Please fill in all fields");
@@ -57,7 +59,6 @@ const ResetPasswordScreen = ({ navigation, resetToken }) => {
     setError(null);
 
     try {
-      // Call the API to reset the password
       const response = await axios.patch(
         `${process.env.EXPO_PUBLIC_API_URL}users/resetPassword/${token}`,
         {
@@ -84,7 +85,7 @@ const ResetPasswordScreen = ({ navigation, resetToken }) => {
         style={styles.goBack}
         onPress={() => navigation.goBack()}
       >
-        <AntDesign name="arrowleft" size={15} color="white" />
+        <Ionicons name="arrow-back" size={24} color={colors.white} />
       </TouchableOpacity>
 
       <Text style={styles.title}>
@@ -120,26 +121,23 @@ const ResetPasswordScreen = ({ navigation, resetToken }) => {
             style={styles.input}
             placeholder="New Password"
             placeholderTextColor={colors.gray}
+            secureTextEntry={!isPasswordShown}
             value={password}
             onChangeText={setPassword}
-            secureTextEntry // Hide entered characters
           />
-
           <TextInput
             style={styles.input}
             placeholder="Confirm Password"
             placeholderTextColor={colors.gray}
+            secureTextEntry={!isConfirmPasswordShown}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
-            secureTextEntry // Hide entered characters
           />
-
           {error && <Text style={styles.errorText}>{error}</Text>}
-
           <TouchableOpacity
             style={styles.button}
             onPress={handleResetPassword}
-            disabled={loading} // Disable button while loading
+            disabled={loading}
           >
             {loading ? (
               <ActivityIndicator color={colors.white} />
@@ -159,6 +157,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: colors.white,
+    paddingHorizontal: 20,
   },
   goBack: {
     position: "absolute",
@@ -166,7 +165,7 @@ const styles = StyleSheet.create({
     left: 20,
     padding: 10,
     borderRadius: 20,
-    backgroundColor: "#0A96E7",
+    backgroundColor: colors.primary,
   },
   title: {
     fontSize: 24,
@@ -175,12 +174,12 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   input: {
-    width: "80%",
-    height: 40,
+    width: "100%",
+    height: 48,
+    borderColor: colors.gray,
     borderWidth: 1,
-    borderColor: colors.grayLight,
     borderRadius: 8,
-    paddingHorizontal: 10,
+    paddingHorizontal: 22,
     marginBottom: 20,
     color: colors.black,
   },
@@ -191,7 +190,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     alignItems: "center",
     justifyContent: "center",
-    width: "80%",
+    width: "100%",
   },
   buttonText: {
     fontSize: 16,
