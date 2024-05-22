@@ -1,5 +1,14 @@
 import React, { useState } from "react";
-import { View, StyleSheet, TextInput, Button, Alert } from "react-native";
+import {
+  View,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  Linking,
+  Text,
+} from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
 import * as MailComposer from "expo-mail-composer";
 import colors from "./../../constants/colors";
 
@@ -39,6 +48,11 @@ const Contact = () => {
       });
   };
 
+  const handleCallUs = () => {
+    const phoneNumber = "26842050";
+    Linking.openURL(`tel:${phoneNumber}`);
+  };
+
   return (
     <View style={styles.container}>
       <TextInput
@@ -49,11 +63,14 @@ const Contact = () => {
         onChangeText={setFeedback}
         placeholderTextColor={colors.placeholder}
       />
-      <Button
-        title="Send Feedback"
-        onPress={sendFeedback}
-        color={colors.primary}
-      />
+      <TouchableOpacity style={styles.button} onPress={sendFeedback}>
+        <Text>Envoyer feedback</Text>
+        <MaterialIcons name="email" size={24} color={colors.primary} />
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={handleCallUs}>
+        <Text>Appelle-Nous</Text>
+        <MaterialIcons name="phone" size={24} color={colors.primary} />
+      </TouchableOpacity>
     </View>
   );
 };
@@ -74,6 +91,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.inputBackground,
     color: colors.text,
     borderRadius: 5,
+    bottom: 10,
+  },
+  button: {
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    marginBottom: 20,
+    alignItems: "center",
   },
 });
 

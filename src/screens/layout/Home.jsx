@@ -154,8 +154,8 @@ const Home = () => {
     <View style={styles.container}>
       <MapView
         style={styles.map}
-        minZoomLevel={7}
-        maxZoomLevel={15}
+        minZoomLevel={6}
+        maxZoomLevel={10}
         provider={PROVIDER_GOOGLE}
         mapType={mapType}
         initialRegion={{

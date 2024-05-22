@@ -22,7 +22,7 @@ const Profile = () => {
 
   useEffect(() => {
     fetchUserProfile();
-  }, []);
+  }, [userProfile]);
 
   const fetchUserProfile = async () => {
     try {

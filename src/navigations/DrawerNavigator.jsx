@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import {
   View,
   Text,
@@ -25,6 +25,7 @@ import ListofMaps from "./../screens/layout/ListofMaps";
 import colors from "../constants/colors";
 import EditUser from "../screens/layout/EditUser";
 import { useNavigation } from "@react-navigation/native";
+import { AuthContext } from "../context/AuthContext";
 
 const Drawer = createDrawerNavigator();
 

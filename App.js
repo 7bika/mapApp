@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import OnBoardingScreen from "./src/screens/onBoardingScreen/OnBoardingScreen";
@@ -9,12 +9,21 @@ import ForgotPasswordScreen from "./src/screens/auth/ForgotPasswordScreen";
 import ResetPasswordScreen from "./src/screens/auth/ResetPasswordScreen";
 import DrawerNavigator from "./src/navigations/DrawerNavigator";
 import Home from "./src/screens/layout/Home";
-
+import { AuthProvider } from "./src/context/AuthContext";
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const checkAuthentication = async () => {
+      const token = await AsyncStorage.getItem("token");
+      setIsAuthenticated(!!token);
+    };
+
+    checkAuthentication();
+  }, []);
 
   const AppStack = () => (
     <Stack.Navigator>
