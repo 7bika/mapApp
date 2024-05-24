@@ -11,7 +11,8 @@ import {
 import MapView, { Marker, Callout, PROVIDER_GOOGLE } from "react-native-maps";
 import * as Location from "expo-location";
 import { Picker } from "@react-native-picker/picker";
-import { getToken } from "./../../composable/local"; // Import your token fetching logic
+import { getToken } from "./../../composable/local";
+import { useFocusEffect } from "@react-navigation/native";
 
 const Home = () => {
   const [places, setPlaces] = useState([]);
@@ -23,18 +24,20 @@ const Home = () => {
     name: "",
     description: "",
     type: "",
-    address: "", // Add address field
-    createdBy: "", // Initialize createdBy as an empty string
+    address: "",
+    createdBy: "",
   });
   const [mapType, setMapType] = useState("standard");
   const [userProfile, setUserProfile] = useState(null);
   const [userId, setUserId] = useState(null);
 
-  useEffect(() => {
-    fetchUserProfile();
-    fetchPlaces();
-    getCurrentLocation();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchUserProfile();
+      fetchPlaces();
+      getCurrentLocation();
+    }, [])
+  );
 
   const fetchUserProfile = async () => {
     try {
@@ -75,10 +78,10 @@ const Home = () => {
       const data = await response.json();
       const normalizedPlaces = data.data.places.map((place) => ({
         ...place,
-        latitude: place.location.coordinates[1], // Ensure correct order
-        longitude: place.location.coordinates[0], // Ensure correct order
+        latitude: place.location.coordinates[1],
+        longitude: place.location.coordinates[0],
       }));
-      console.log("Fetched places:", normalizedPlaces); // Log fetched places
+      console.log("Fetched places:", normalizedPlaces);
       setPlaces(normalizedPlaces);
     } catch (error) {
       console.error("Error fetching places:", error);
@@ -154,8 +157,8 @@ const Home = () => {
     <View style={styles.container}>
       <MapView
         style={styles.map}
-        minZoomLevel={6}
-        maxZoomLevel={10}
+        minZoomLevel={7}
+        maxZoomLevel={20}
         provider={PROVIDER_GOOGLE}
         mapType={mapType}
         initialRegion={{

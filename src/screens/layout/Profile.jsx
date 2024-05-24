@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   View,
   Text,
@@ -10,19 +10,17 @@ import {
 } from "react-native";
 import { Avatar, Card } from "react-native-paper";
 import * as ImagePicker from "expo-image-picker";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { getToken } from "../../composable/local";
 import colors from "../../constants/colors";
 import dayjs from "dayjs";
+import { Ionicons } from "@expo/vector-icons";
 
-const Profile = () => {
+const ProfileScreen = () => {
   const navigation = useNavigation();
+  
   const [userProfile, setUserProfile] = useState(null);
   const [profileImage, setProfileImage] = useState(null);
-
-  useEffect(() => {
-    fetchUserProfile();
-  }, [userProfile]);
 
   const fetchUserProfile = async () => {
     try {
@@ -54,6 +52,21 @@ const Profile = () => {
     }
   };
 
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchUserProfile();
+    }, [])
+  );
+
+  if (!userProfile) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
+  // image select
   const handleSelectImageFromGallery = async () => {
     try {
       let result = await ImagePicker.launchImageLibraryAsync({
@@ -63,10 +76,10 @@ const Profile = () => {
         quality: 1,
       });
 
-      if (!result.cancelled) {
+      if (!result.canceled) {
         await handleImageUpload(result.uri);
       } else {
-        Alert.alert("You did not select any image.");
+        Alert.alert("Vous n'avez pas Choisi aucune image");
       }
     } catch (error) {
       console.error("Error selecting image from gallery:", error);
@@ -81,10 +94,10 @@ const Profile = () => {
         quality: 1,
       });
 
-      if (!result.cancelled) {
+      if (!result.canceled) {
         await handleImageUpload(result.uri);
       } else {
-        Alert.alert("You did not take any picture.");
+        Alert.alert("Vous n'avez pas pris aucune Image");
       }
     } catch (error) {
       console.error("Error selecting image from camera:", error);
@@ -99,6 +112,7 @@ const Profile = () => {
       formData.append("photo", {
         uri: uri,
         type: "image/jpeg",
+        name: "profile.jpg",
       });
 
       const response = await fetch(
@@ -134,33 +148,34 @@ const Profile = () => {
           <Card.Content style={styles.content}>
             {userProfile && (
               <View style={styles.userInfo}>
-                <TouchableOpacity onPress={handleSelectImageFromGallery}>
-                  <Avatar.Image
-                    size={120}
-                    source={{
-                      uri: profileImage || "https://via.placeholder.com/100",
-                    }}
-                    style={styles.avatar}
-                  />
-                </TouchableOpacity>
+                <View style={styles.avatarContainer}>
+                  <TouchableOpacity onPress={handleSelectImageFromGallery}>
+                    <Avatar.Image
+                      size={120}
+                      source={{
+                        uri: profileImage || "https://via.placeholder.com/100",
+                      }}
+                      style={styles.avatar}
+                    />
+                  </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.cameraButton}
-                  onPress={handleSelectImageFromCamera}
-                >
-                  <Image
-                    source={require("./../../../assets/favicon.png")}
-                    style={styles.cameraIcon}
-                  />
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.cameraButton}
+                    onPress={handleSelectImageFromCamera}
+                  >
+                    <Ionicons name="camera" size={24} color={colors.white} />
+                  </TouchableOpacity>
+                </View>
 
                 <Text style={styles.userName}>{userProfile.name}</Text>
                 <Text style={styles.userRole}>{userProfile.role}</Text>
                 <Text style={styles.userDate}>
-                  Created: {dayjs(userProfile.createdAt).format("MMM D, YYYY")}
+                  Créer en :{" "}
+                  {dayjs(userProfile.createdAt).format("MMM D, YYYY")}
                 </Text>
                 <Text style={styles.userDate}>
-                  Updated: {dayjs(userProfile.updatedAt).format("MMM D, YYYY")}
+                  Modifier en:{" "}
+                  {dayjs(userProfile.updatedAt).format("MMM D, YYYY")}
                 </Text>
               </View>
             )}
@@ -181,53 +196,75 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  settingsButton: {
+    position: "absolute",
+    top: -10,
+    marginLeft: 200,
+    backgroundColor: colors.grayLight,
+    padding: 8,
+    borderRadius: 20,
+    zIndex: 10,
+  },
   card: {
     width: "90%",
     backgroundColor: colors.white,
     borderRadius: 20,
     elevation: 5,
-    padding: 20,
+    paddingVertical: 30,
+    paddingHorizontal: 20,
+    alignItems: "center",
+    height: "55%",
   },
   content: {
     alignItems: "center",
   },
-
-  cameraButton: {
-    marginTop: 10,
-    backgroundColor: colors.primary,
-    borderRadius: 50,
-    width: 60,
-    height: 60,
-    justifyContent: "center",
+  avatarContainer: {
+    position: "relative",
     alignItems: "center",
+    marginBottom: 15,
   },
-  cameraIcon: {
-    width: 30,
-    height: 30,
-    tintColor: colors.white,
+  cameraButton: {
+    position: "absolute",
+    bottom: 0,
+    right: 10,
+    backgroundColor: colors.primary,
+    borderRadius: 20,
+    padding: 8,
   },
   userInfo: {
     alignItems: "center",
-    marginVertical: 20,
+    marginTop: 20,
   },
   avatar: {
     marginBottom: 15,
   },
   userName: {
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: "bold",
     color: colors.dark,
     marginBottom: 5,
   },
   userRole: {
-    fontSize: 18,
+    fontSize: 25,
     color: colors.gray,
+    marginTop: 10,
     marginBottom: 5,
   },
   userDate: {
     fontSize: 14,
     color: colors.gray,
   },
+  button: {
+    marginTop: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: colors.danger,
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: colors.white,
+    fontWeight: "bold",
+  },
 });
 
-export default Profile;
+export default ProfileScreen;

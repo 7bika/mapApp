@@ -9,7 +9,7 @@ import ForgotPasswordScreen from "./src/screens/auth/ForgotPasswordScreen";
 import ResetPasswordScreen from "./src/screens/auth/ResetPasswordScreen";
 import DrawerNavigator from "./src/navigations/DrawerNavigator";
 import Home from "./src/screens/layout/Home";
-import { AuthProvider } from "./src/context/AuthContext";
+import { AwaitedPlacesProvider } from "./src/context/AwaitedPlacesContext";
 
 const Stack = createNativeStackNavigator();
 
@@ -67,12 +67,14 @@ export default function App() {
   );
 
   return (
-    <NavigationContainer>
-      {isAuthenticated ? (
-        <DrawerNavigator setIsAuthenticated={setIsAuthenticated} />
-      ) : (
-        <AppStack />
-      )}
-    </NavigationContainer>
+    <AwaitedPlacesProvider>
+      <NavigationContainer>
+        {isAuthenticated ? (
+          <DrawerNavigator setIsAuthenticated={setIsAuthenticated} />
+        ) : (
+          <AppStack />
+        )}
+      </NavigationContainer>
+    </AwaitedPlacesProvider>
   );
 }

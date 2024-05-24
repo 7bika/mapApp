@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   View,
   Text,
@@ -11,10 +11,11 @@ import {
   TextInput,
 } from "react-native";
 import { AntDesign, Feather } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import { Card } from "react-native-paper";
 import colors from "../../constants/colors";
 import { getToken } from "../../composable/local";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AwaitedPlacesContext } from "./../../context/AwaitedPlacesContext";
 
 const ListofMaps = ({ navigation }) => {
   const [places, setPlaces] = useState([]);
@@ -24,20 +25,24 @@ const ListofMaps = ({ navigation }) => {
   const [userId, setUserId] = useState(null);
   const [showFullDescriptions, setShowFullDescriptions] = useState({});
   const [editModalVisible, setEditModalVisible] = useState(false);
-
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [placeToDelete, setPlaceToDelete] = useState(null);
-
   const [editPlaceData, setEditPlaceData] = useState({
     id: null,
     name: "",
     description: "",
   });
+  const [updating, setUpdating] = useState(false);
 
-  useEffect(() => {
-    fetchUser();
-    fetchPlaces();
-  }, []);
+  const { addPlace, updatePlace, deletePlace } =
+    useContext(AwaitedPlacesContext);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchUser();
+      fetchPlaces();
+    }, [])
+  );
 
   const fetchUser = async () => {
     try {
@@ -94,20 +99,9 @@ const ListofMaps = ({ navigation }) => {
     }));
   };
 
-  const storeItem = async (item) => {
-    try {
-      const existingItems = await AsyncStorage.getItem("awaitedPlaces");
-      const parsedItems = existingItems ? JSON.parse(existingItems) : [];
-      const updatedItems = [...parsedItems, item];
-      await AsyncStorage.setItem("awaitedPlaces", JSON.stringify(updatedItems));
-    } catch (error) {
-      console.error("Error storing item:", error);
-    }
-  };
-
   const handleAddToAwaited = async (item) => {
     try {
-      await storeItem(item);
+      await addPlace(item);
       navigation.navigate("Favoris", { selectedItem: item });
     } catch (error) {
       console.error("Error adding item to awaited places:", error);
@@ -124,6 +118,7 @@ const ListofMaps = ({ navigation }) => {
   };
 
   const handleEditPlace = async () => {
+    setUpdating(true);
     try {
       const token = await getToken();
       const response = await fetch(
@@ -146,23 +141,26 @@ const ListofMaps = ({ navigation }) => {
       const updatedPlace = await response.json();
       setPlaces((prevPlaces) =>
         prevPlaces.map((place) =>
-          place.id === updatedPlace.id ? updatedPlace : place
+          place.id === updatedPlace.data.place.id
+            ? updatedPlace.data.place
+            : place
         )
       );
+      await updatePlace(updatedPlace.data.place);
       setEditModalVisible(false);
     } catch (error) {
       console.error("Error editing place:", error);
       Alert.alert("Error", "An error occurred while editing the place.");
+    } finally {
+      setUpdating(false);
     }
   };
 
-  // delete
   const handleDelete = (item) => {
     setPlaceToDelete(item);
     setDeleteModalVisible(true);
   };
 
-  // confirm delete
   const handleConfirmDelete = async () => {
     if (!placeToDelete) return;
     try {
@@ -182,6 +180,7 @@ const ListofMaps = ({ navigation }) => {
       setPlaces((prevPlaces) =>
         prevPlaces.filter((place) => place.id !== placeToDelete.id)
       );
+      await deletePlace(placeToDelete.id);
       setDeleteModalVisible(false);
     } catch (error) {
       console.error("Error deleting place:", error);
@@ -200,30 +199,6 @@ const ListofMaps = ({ navigation }) => {
       return new Date(date).toLocaleDateString();
     };
 
-    const handleDelete = async () => {
-      try {
-        const token = await getToken();
-        const response = await fetch(
-          `${process.env.EXPO_PUBLIC_API_URL}places/${item.id}`,
-          {
-            method: "DELETE",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        if (!response.ok) {
-          throw new Error("Failed to delete place");
-        }
-        setPlaces((prevPlaces) =>
-          prevPlaces.filter((place) => place.id !== item.id)
-        );
-      } catch (error) {
-        console.error("Error deleting place:", error);
-        Alert.alert("Error", "An error occurred while deleting the place.");
-      }
-    };
-
     const userIsAdmin = false;
 
     return (
@@ -231,68 +206,64 @@ const ListofMaps = ({ navigation }) => {
         <Card.Content>
           <Text style={styles.placeName}>{item.name}</Text>
           <Text style={styles.placeDescription}>
-            {formattedDescription}
+            Addresse : {item?.address || item.location.address}
+          </Text>
+          <Text style={styles.placeDescription}>
+            Description : {formattedDescription}
             {item.description.length > 30 && (
               <Text
-                style={styles.readMore}
+                style={styles.showMore}
                 onPress={() => toggleDescription(item.id)}
               >
-                {showFullDescriptions[item.id] ? " Show less" : " Read more"}
+                {showFullDescriptions[item.id] ? " Show less" : " Show more"}
               </Text>
             )}
           </Text>
-          <Text style={styles.placeDescription}>Type: {item.type}</Text>
-          <Text style={styles.placeDescription}>
-            Date de création: {formattedDate(item.createdAt)}
+          <Text style={styles.placeDate}>
+            Created at: {formattedDate(item.createdAt)}
           </Text>
-          <View style={styles.createdBy}>
-            <Text style={styles.placeDescription}>
-              Créé par: {item.createdBy.name}
-            </Text>
-            <Text style={styles.placeDescription}>
-              Créé en: {formattedDate(item.createdAt)}
-            </Text>
-            <Text style={styles.placeDescription}>
-              Modifié en: {formattedDate(item.updatedAt)}
-            </Text>
-          </View>
-          <View style={styles.iconRow}>
+          <Text style={styles.placeDate}>
+            Updated at: {formattedDate(item.updatedAt)}
+          </Text>
+          <View style={styles.actionButtons}>
             <TouchableOpacity
+              style={styles.actionButton}
               onPress={() => handleAddToAwaited(item)}
-              style={styles.iconButton}
             >
-              <AntDesign name="hourglass" size={24} color={colors.primary} />
-              <Text style={styles.iconLabel}>En attente</Text>
+              <AntDesign name="pluscircleo" size={24} color={colors.primary} />
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => openEditModal(item)}
-              style={styles.iconButton}
-            >
-              <Feather name="edit" size={24} color={colors.primary} />
-            </TouchableOpacity>
-            <Text style={styles.iconLabel2}>Modifier</Text>
-            {(item.createdBy._id === userId || userIsAdmin) && (
-              <TouchableOpacity
-                onPress={handleDelete}
-                style={styles.iconButton}
-              >
-                <AntDesign name="delete" size={24} color={colors.red} />
-                <Text style={styles.iconLabel}>Supprimer</Text>
-              </TouchableOpacity>
+            {(userIsAdmin || item.createdBy._id === userId) && (
+              <>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() => openEditModal(item)}
+                >
+                  <Feather name="edit" size={24} color={colors.primary} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() => handleDelete(item)}
+                >
+                  <AntDesign name="delete" size={24} color="red" />
+                </TouchableOpacity>
+              </>
             )}
+          </View>
+          <View style={styles.createdByContainer}>
+            <Text style={styles.createdByText}>
+              Créer Par: {item.createdBy.name}
+            </Text>
+            <Text style={styles.createdByText}>
+              Role: {item.createdBy.role}
+            </Text>
+            <Text style={styles.createdByText}>
+              Céer En: {formattedDate(item.createdAt)}
+            </Text>
           </View>
         </Card.Content>
       </Card>
     );
   };
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
@@ -301,82 +272,86 @@ const ListofMaps = ({ navigation }) => {
         onPress={handleTogglePlaces}
       >
         <Text style={styles.toggleButtonText}>
-          {showUserPlaces ? "Toutes les places" : "Mes Places"}
+          {showUserPlaces ? "Show All Places" : "Show My Places"}
         </Text>
       </TouchableOpacity>
-      <FlatList
-        data={filteredPlaces}
-        renderItem={renderPlace}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.list}
-      />
+      {loading ? (
+        <ActivityIndicator size="large" color={colors.primary} />
+      ) : (
+        <FlatList
+          data={filteredPlaces}
+          renderItem={renderPlace}
+          keyExtractor={(item) => item.id}
+        />
+      )}
       <Modal
+        visible={editModalVisible}
         animationType="slide"
         transparent={true}
-        visible={editModalVisible}
-        onRequestClose={() => setEditModalVisible(false)}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Modifier Place</Text>
             <TextInput
               style={styles.input}
               placeholder="Name"
               value={editPlaceData.name}
               onChangeText={(text) =>
-                setEditPlaceData((prevData) => ({ ...prevData, name: text }))
+                setEditPlaceData({ ...editPlaceData, name: text })
               }
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, styles.textArea]}
               placeholder="Description"
               value={editPlaceData.description}
               onChangeText={(text) =>
-                setEditPlaceData((prevData) => ({
-                  ...prevData,
-                  description: text,
-                }))
+                setEditPlaceData({ ...editPlaceData, description: text })
               }
+              multiline
             />
-            <TouchableOpacity
-              style={styles.submitButton}
-              onPress={handleEditPlace}
-            >
-              <Text style={styles.submitButtonText}>Save</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => setEditModalVisible(false)}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
+            {updating ? (
+              <ActivityIndicator size="large" color={colors.primary} />
+            ) : (
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={styles.modalButton}
+                  onPress={handleEditPlace}
+                >
+                  <Text style={styles.modalButtonText}>Enregistrer</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.cancelButton]}
+                  onPress={() => setEditModalVisible(false)}
+                >
+                  <Text style={styles.modalButtonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </View>
       </Modal>
-
-      {/* delete modal */}
       <Modal
+        visible={deleteModalVisible}
         animationType="slide"
         transparent={true}
-        visible={deleteModalVisible}
-        onRequestClose={() => setDeleteModalVisible(false)}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.confirmationText}>
-              Es-tu sur de supprimer ?
-            </Text>
-            <View style={styles.modalButtonRow}>
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Confirmer Suppression</Text>
+            <Text>Etes vous sur de vouloir supprimer cette place?</Text>
+            <View style={styles.modalButtons}>
               <TouchableOpacity
-                style={styles.confirmButton}
+                style={styles.modalButton}
                 onPress={handleConfirmDelete}
               >
-                <Text style={styles.confirmButtonText}>Oui</Text>
+                <Text style={styles.modalButtonText}>Oui</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.cancelButton}
+                style={[styles.modalButton, styles.cancelButton]}
                 onPress={() => setDeleteModalVisible(false)}
               >
-                <Text style={styles.cancelButtonText}>Non</Text>
+                <Text style={styles.modalButtonText}>Non</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -392,143 +367,108 @@ const styles = StyleSheet.create({
     backgroundColor: colors.grayLight,
     padding: 15,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  list: {
-    paddingVertical: 10,
-  },
-  card: {
-    marginVertical: 10,
-    backgroundColor: colors.white,
-    borderRadius: 15,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-    padding: 15,
-  },
-  placeName: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: colors.dark,
-    marginBottom: 5,
-  },
-  placeDescription: {
-    fontSize: 16,
-    color: colors.gray,
-    marginBottom: 5,
-  },
-  readMore: {
-    color: colors.primary,
-    fontWeight: "bold",
-  },
-  createdBy: {
-    marginTop: 10,
-    padding: 10,
-    backgroundColor: colors.white,
-    borderRadius: 10,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-  },
   toggleButton: {
+    padding: 10,
     backgroundColor: colors.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 10,
+    borderRadius: 8,
+    marginBottom: 16,
     alignItems: "center",
-    marginBottom: 15,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
   },
   toggleButtonText: {
-    color: colors.white,
-    fontSize: 18,
+    color: "#fff",
     fontWeight: "bold",
-  },
-  deleteButton: {
-    color: colors.red,
     fontSize: 16,
+    height: 29,
+  },
+  card: {
+    marginBottom: 16,
+  },
+  placeName: {
+    marginBottom: 15,
+    fontSize: 20,
     fontWeight: "bold",
-    marginTop: 10,
+    alignSelf: "center",
+    textDecorationLine: "underline",
   },
-  iconRow: {
+  placeDescription: {
+    marginTop: 8,
+    fontSize: 16,
+    color: colors.black,
+  },
+  showMore: {
+    color: colors.primary,
+  },
+  placeDate: {
+    marginTop: 8,
+    fontSize: 15,
+    color: colors.primary,
+  },
+  actionButtons: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    marginTop: 10,
+    justifyContent: "flex-end",
+    marginTop: 16,
   },
-  iconButton: {
-    padding: 5,
+  actionButton: {
+    marginLeft: 16,
   },
-  iconLabel: {
-    fontSize: 12,
-    color: colors.gray,
-    right: 15,
+  createdByContainer: {
+    marginTop: 16,
+    padding: 10,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 8,
+    borderWidth: 1,
+    margin: 10,
   },
-  iconLabel2: {
-    fontSize: 12,
-    color: colors.gray,
-    top: 30,
-    right: 55,
+  createdByText: {
+    fontSize: 15,
+    color: colors.textSecondary,
   },
-  modalContainer: {
+  modalBackground: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
-  modalContent: {
-    width: "80%",
-    backgroundColor: colors.white,
+  modalContainer: {
+    width: "90%",
+    backgroundColor: "#fff",
     borderRadius: 10,
     padding: 20,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 15,
+    alignSelf: "center",
   },
   input: {
-    width: "100%",
-    height: 40,
-    borderColor: colors.gray,
     borderWidth: 1,
+    borderColor: colors.border,
+    padding: 8,
+    marginVertical: 8,
     borderRadius: 5,
-    marginBottom: 15,
-    paddingHorizontal: 10,
   },
-  submitButton: {
+  textArea: {
+    height: 80,
+    textAlignVertical: "top",
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  modalButton: {
+    padding: 16,
     backgroundColor: colors.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 5,
+    borderRadius: 8,
+    flex: 1,
     alignItems: "center",
-    marginBottom: 10,
-  },
-  submitButtonText: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: "bold",
+    marginHorizontal: 5,
   },
   cancelButton: {
-    backgroundColor: colors.red,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    alignItems: "center",
+    backgroundColor: colors.grayLight,
   },
-  cancelButtonText: {
-    color: colors.white,
-    fontSize: 16,
+  modalButtonText: {
+    color: "#fff",
     fontWeight: "bold",
   },
 });

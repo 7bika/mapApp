@@ -1,103 +1,103 @@
-import React, { useState, useEffect } from "react";
+// Favoris.js
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
-  ScrollView,
-  TouchableOpacity,
+  FlatList,
   StyleSheet,
+  TouchableOpacity,
   Alert,
+  Modal,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AntDesign } from "@expo/vector-icons";
+import { Card } from "react-native-paper";
 import colors from "../../constants/colors";
+import { AwaitedPlacesContext } from "./../../context/AwaitedPlacesContext";
 
-const Favoris = ({ navigation }) => {
-  const [items, setItems] = useState([]);
+const Favoris = () => {
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [placeToDelete, setPlaceToDelete] = useState(null);
+  const { awaitedPlaces, deletePlace } = useContext(AwaitedPlacesContext);
 
-  useEffect(() => {
-    fetchItems();
-  }, []);
+  const handleDelete = (item) => {
+    setPlaceToDelete(item);
+    setDeleteModalVisible(true);
+  };
 
-  const fetchItems = async () => {
+  const handleConfirmDelete = async () => {
+    if (!placeToDelete) return;
     try {
-      const storedItems = await AsyncStorage.getItem("awaitedPlaces");
-      if (storedItems !== null) {
-        setItems(JSON.parse(storedItems));
-      }
+      await deletePlace(placeToDelete.id);
+      setDeleteModalVisible(false);
     } catch (error) {
-      console.error("Error fetching awaited places:", error);
+      console.error("Error deleting place:", error);
+      Alert.alert("Error", "An error occurred while deleting the place.");
+      setDeleteModalVisible(false);
     }
   };
 
-  const deleteItem = (id) => {
-    const updatedItems = items.filter((item) => item.id !== id);
-    setItems(updatedItems);
-    AsyncStorage.setItem("awaitedPlaces", JSON.stringify(updatedItems))
-      .then(() => {
-        console.log("Item deleted from AsyncStorage");
-      })
-      .catch((error) => {
-        console.error("Error deleting item from AsyncStorage:", error);
-        Alert.alert("Error", "An error occurred while deleting the item.");
-      });
-  };
+  const renderPlace = ({ item }) => {
+    const formattedDate = (date) => {
+      return new Date(date).toLocaleDateString();
+    };
 
-  const toggleDescription = (id) => {
-    setItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id
-          ? { ...item, showDescription: !item.showDescription }
-          : item
-      )
+    return (
+      <Card style={styles.card}>
+        <Card.Content>
+          <View style={styles.cardHeader}>
+            <Text style={styles.placeName}>{item.name}</Text>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => handleDelete(item)}
+            >
+              <AntDesign name="delete" size={24} color="red" />
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.placeDescription}>{item.description}</Text>
+          <Text style={styles.placeDescription}>{item.address}</Text>
+          <Text style={styles.placeDate}>
+            Ajouter En: {formattedDate(item.createdAt)}
+          </Text>
+        </Card.Content>
+      </Card>
     );
   };
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {items.length === 0 ? (
-          <Text style={styles.emptyText}>No awaited places</Text>
-        ) : (
-          items.map((item, index) => (
-            <View key={index} style={styles.itemContainer}>
-              <Text style={styles.itemName}>{item.name}</Text>
-              {item.showDescription ? (
-                <>
-                  <Text style={styles.itemDescription}>{item.description}</Text>
-                  <TouchableOpacity
-                    style={styles.showLessButton}
-                    onPress={() => toggleDescription(item.id)}
-                  >
-                    <Text style={styles.showLessButtonText}>Show Less</Text>
-                  </TouchableOpacity>
-                </>
-              ) : (
-                <>
-                  <Text style={styles.itemDescription}>
-                    {item.description.length > 100
-                      ? item.description.substring(0, 100) + "..."
-                      : item.description}
-                  </Text>
-                  {item.description.length > 100 && (
-                    <TouchableOpacity
-                      style={styles.showMoreButton}
-                      onPress={() => toggleDescription(item.id)}
-                    >
-                      <Text style={styles.showMoreButtonText}>Show More</Text>
-                    </TouchableOpacity>
-                  )}
-                </>
-              )}
-              <Text style={styles.itemType}>Type: {item.type}</Text>
+      <FlatList
+        data={awaitedPlaces}
+        renderItem={renderPlace}
+        keyExtractor={(item) => item.id}
+      />
+      <Modal
+        visible={deleteModalVisible}
+        animationType="slide"
+        transparent={true}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Confirm Deletion</Text>
+            <Text style={styles.modalText}>
+              Are you sure you want to delete this place?
+            </Text>
+            <View style={styles.modalButtons}>
               <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => deleteItem(item.id)}
+                style={[styles.modalButton, styles.modalButtonDelete]}
+                onPress={handleConfirmDelete}
               >
-                <Text style={styles.deleteButtonText}>Supprimer</Text>
+                <Text style={styles.modalButtonText}>Yes</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonCancel]}
+                onPress={() => setDeleteModalVisible(false)}
+              >
+                <Text style={styles.modalButtonText}>No</Text>
               </TouchableOpacity>
             </View>
-          ))
-        )}
-      </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -105,58 +105,81 @@ const Favoris = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
+    padding: 16,
+  },
+  card: {
+    marginBottom: 16,
+    borderRadius: 8,
+    overflow: "hidden",
+    elevation: 2,
     backgroundColor: "#fff",
   },
-  scrollContainer: {
-    paddingVertical: 20,
-  },
-  emptyText: {
-    textAlign: "center",
-    fontSize: 18,
-    color: "#777",
-  },
-  itemContainer: {
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 20,
-    borderRadius: 10,
-  },
-  itemName: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  itemDescription: {
-    fontSize: 16,
-    color: "#555",
-  },
-  showMoreButton: {
-    marginTop: 5,
-    alignSelf: "flex-end",
-  },
-  showMoreButtonText: {
-    color: "blue",
-  },
-  showLessButton: {
-    marginTop: 5,
-    alignSelf: "flex-end",
-  },
-  showLessButtonText: {
-    color: "blue",
-  },
-  itemType: {
-    fontSize: 16,
-    color: "#777",
-  },
-  deleteButton: {
-    backgroundColor: colors.danger,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 5,
-    marginTop: 10,
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
   },
-  deleteButtonText: {
+  placeName: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: colors.primary,
+  },
+  placeDescription: {
+    marginTop: 8,
+    fontSize: 18,
+    color: colors.textSecondary,
+  },
+  placeDate: {
+    marginTop: 8,
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
+  actionButton: {
+    marginLeft: 16,
+  },
+  modalBackground: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContainer: {
+    width: "80%",
+    padding: 20,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    marginHorizontal: 5,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  modalButtonDelete: {
+    backgroundColor: "red",
+  },
+  modalButtonCancel: {
+    backgroundColor: colors.primary,
+  },
+  modalButtonText: {
     color: "#fff",
     fontWeight: "bold",
   },

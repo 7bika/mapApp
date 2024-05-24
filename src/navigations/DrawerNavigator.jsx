@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -12,11 +12,7 @@ import {
   DrawerContentScrollView,
   DrawerItemList,
 } from "@react-navigation/drawer";
-import {
-  SimpleLineIcons,
-  MaterialIcons,
-  MaterialCommunityIcons,
-} from "@expo/vector-icons";
+import { SimpleLineIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import Home from "./../screens/layout/Home";
 import Favoris from "./../screens/layout/Favoris";
 import Contact from "./../screens/layout/Contact";
@@ -25,7 +21,7 @@ import ListofMaps from "./../screens/layout/ListofMaps";
 import colors from "../constants/colors";
 import EditUser from "../screens/layout/EditUser";
 import { useNavigation } from "@react-navigation/native";
-import { AuthContext } from "../context/AuthContext";
+import { PlacesProvider } from "../context/PlacesContext";
 
 const Drawer = createDrawerNavigator();
 
@@ -64,6 +60,7 @@ const CustomDrawerContent = (props) => {
           style={styles.drawerHeaderImage}
           resizeMode="contain"
         />
+        <Text style={styles.drawerHeaderText}>Bienvenue!</Text>
       </View>
       <DrawerItemList {...props} />
       <TouchableOpacity onPress={handleLogout}>
@@ -78,86 +75,88 @@ const CustomDrawerContent = (props) => {
 
 const DrawerNavigator = (props) => {
   return (
-    <Drawer.Navigator
-      screenOptions={{
-        drawerActiveBackgroundColor: colors.primary,
-        drawerInactiveBackgroundColor: colors.white,
-        drawerActiveTintColor: colors.white,
-        drawerInactiveTintColor: colors.gray,
-        drawerLabelStyle: { fontSize: 16 },
-      }}
-      drawerContent={(drawerProps) => (
-        <CustomDrawerContent
-          {...drawerProps}
-          setIsAuthenticated={props.setIsAuthenticated}
+    <PlacesProvider>
+      <Drawer.Navigator
+        screenOptions={{
+          drawerActiveBackgroundColor: colors.primary,
+          drawerInactiveBackgroundColor: colors.white,
+          drawerActiveTintColor: colors.white,
+          drawerInactiveTintColor: colors.gray,
+          drawerLabelStyle: { fontSize: 16 },
+        }}
+        drawerContent={(drawerProps) => (
+          <CustomDrawerContent
+            {...drawerProps}
+            setIsAuthenticated={props.setIsAuthenticated}
+          />
+        )}
+      >
+        <Drawer.Screen
+          name="Home"
+          options={{
+            drawerLabel: "Home",
+            drawerIcon: ({ color, size }) => (
+              <SimpleLineIcons name="home" size={size} color={color} />
+            ),
+          }}
+          component={Home}
         />
-      )}
-    >
-      <Drawer.Screen
-        name="Home"
-        options={{
-          drawerLabel: "Home",
-          drawerIcon: ({ color, size }) => (
-            <SimpleLineIcons name="home" size={size} color={color} />
-          ),
-        }}
-        component={Home}
-      />
-      <Drawer.Screen
-        name="List of Maps"
-        options={{
-          drawerLabel: "Liste des Places",
-          drawerIcon: ({ color, size }) => (
-            <SimpleLineIcons name="map" size={size} color={color} />
-          ),
-        }}
-        component={ListofMaps}
-      />
-      <Drawer.Screen
-        name="Profile"
-        options={{
-          drawerLabel: "Profil",
-          drawerIcon: ({ color, size }) => (
-            <SimpleLineIcons name="user" size={size} color={color} />
-          ),
-        }}
-        component={Profile}
-      />
-      <Drawer.Screen
-        name="Settings"
-        options={{
-          drawerLabel: "paramètres de profil",
-          drawerIcon: ({ color, size }) => (
-            <SimpleLineIcons name="settings" size={size} color={color} />
-          ),
-        }}
-        component={EditUser}
-      />
-      <Drawer.Screen
-        name="Favoris"
-        options={{
-          drawerLabel: "Liste d'attente",
-          drawerIcon: ({ color, size }) => (
-            <SimpleLineIcons name="hourglass" size={size} color={color} />
-          ),
-        }}
-        component={Favoris}
-      />
-      <Drawer.Screen
-        name="Contact"
-        options={{
-          drawerLabel: "Contact",
-          drawerIcon: ({ color, size }) => (
-            <MaterialCommunityIcons
-              name="message-alert-outline"
-              size={size}
-              color={color}
-            />
-          ),
-        }}
-        component={Contact}
-      />
-    </Drawer.Navigator>
+        <Drawer.Screen
+          name="List of Maps"
+          options={{
+            drawerLabel: "Liste des Places",
+            drawerIcon: ({ color, size }) => (
+              <SimpleLineIcons name="map" size={size} color={color} />
+            ),
+          }}
+          component={ListofMaps}
+        />
+        <Drawer.Screen
+          name="Profile"
+          options={{
+            drawerLabel: "Profil",
+            drawerIcon: ({ color, size }) => (
+              <SimpleLineIcons name="user" size={size} color={color} />
+            ),
+          }}
+          component={Profile}
+        />
+        <Drawer.Screen
+          name="Settings"
+          options={{
+            drawerLabel: "paramètres de profil",
+            drawerIcon: ({ color, size }) => (
+              <SimpleLineIcons name="settings" size={size} color={color} />
+            ),
+          }}
+          component={EditUser}
+        />
+        <Drawer.Screen
+          name="Favoris"
+          options={{
+            drawerLabel: "Liste d'attente",
+            drawerIcon: ({ color, size }) => (
+              <SimpleLineIcons name="hourglass" size={size} color={color} />
+            ),
+          }}
+          component={Favoris}
+        />
+        <Drawer.Screen
+          name="Contact"
+          options={{
+            drawerLabel: "Contact",
+            drawerIcon: ({ color, size }) => (
+              <MaterialCommunityIcons
+                name="message-alert-outline"
+                size={size}
+                color={color}
+              />
+            ),
+          }}
+          component={Contact}
+        />
+      </Drawer.Navigator>
+    </PlacesProvider>
   );
 };
 
@@ -174,6 +173,12 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
+  },
+  drawerHeaderText: {
+    color: colors.white,
+    fontSize: 18,
+    fontWeight: "bold",
+    marginTop: 10,
   },
   logoutButton: {
     flexDirection: "row",
