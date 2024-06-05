@@ -219,12 +219,14 @@ const ListofMaps = ({ navigation }) => {
               </Text>
             )}
           </Text>
+          <Text style={styles.placeDate}>Type : {item.type}</Text>
           <Text style={styles.placeDate}>
             Created at: {formattedDate(item.createdAt)}
           </Text>
           <Text style={styles.placeDate}>
             Updated at: {formattedDate(item.updatedAt)}
           </Text>
+
           <View style={styles.actionButtons}>
             <TouchableOpacity
               style={styles.actionButton}
@@ -257,7 +259,7 @@ const ListofMaps = ({ navigation }) => {
               Role: {item.createdBy.role}
             </Text>
             <Text style={styles.createdByText}>
-              Céer En: {formattedDate(item.createdAt)}
+              Créer En: {formattedDate(item.createdAt)}
             </Text>
           </View>
         </Card.Content>
